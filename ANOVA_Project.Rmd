@@ -1,0 +1,325 @@
+---
+title: "Solving problems using Analysis of Variance (ANOVA) in R"
+author: "Eduardo Marquez Mora"
+date: "2025"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# One Way ANOVA: Heart Rates of Smokers
+Researchers recorded resting heart rates (beats per minute) for three groups of adults: **nonsmokers, light smokers, and heavy smokers**. We wish to determine whether mean heart rate differs among the three groups.
+\
+```{r}
+# -------------------------------
+# Dataset
+# -------------------------------
+
+# Resting heart rate (bpm) by smoking category
+nonSmoker = c(70, 58, 51, 56, 53, 53, 65)
+lightSmoker = c(67, 75, 65, 78, 62, 70, 73)
+heavySmoker = c(79, 80, 77, 77, 86, 68, 83)
+
+# Response variable: Heart Rate
+heartRate = c(nonSmoker, lightSmoker, heavySmoker)
+
+# Categorical variable: People (with 7 observations each)
+people = factor(rep(c("nonSmoker", "lightSmoker", "heavySmoker"), each = 7))
+
+# Data frame for plotting and ANOVA
+heartRateDataFrame = data.frame(people, heartRate)
+
+# Display the first few rows of the data to verify structure
+head(heartRateDataFrame)
+
+```
+\
+
+### Generate the Descriptive Statistic of each group (non-smoker, light smoker, heavy smoker)
+
+```{r}
+# Extract data by group
+nonSmoker = heartRateDataFrame$heartRate[heartRateDataFrame$people == "nonSmoker"]
+lightSmoker = heartRateDataFrame$heartRate[heartRateDataFrame$people == "lightSmoker"]
+heavySmoker = heartRateDataFrame$heartRate[heartRateDataFrame$people == "heavySmoker"]
+
+# Statistics of each group
+# nonSmokers
+numOfNonSmokers = length(nonSmoker)
+meanOfNonSmokers = mean(nonSmoker)
+varianceOfNonSmokers = var(nonSmoker)
+stdevOfNonSmokers = sd(nonSmoker)
+
+# lightSmokers
+numOfLightSmokers = length(lightSmoker)
+meanOfLightSmokers = mean(lightSmoker)
+varianceOfLightSmokers = var(lightSmoker)
+stdevOfLightSmokers = sd(lightSmoker)
+
+# heavySmokers
+numOfHeavySmokers = length(heavySmoker)
+meanOfHeavySmokers = mean(heavySmoker)
+varianceOfHeavySmokers = var(heavySmoker)
+stdevOfHeavySmokers = sd(heavySmoker)
+
+
+# Summary Table
+summaryTable = data.frame(
+  Group = c("nonSmokers", "lightSmokers", "heavySmokers"),
+  n = c(numOfNonSmokers, numOfLightSmokers, numOfHeavySmokers),
+  Mean = round(c(meanOfNonSmokers, meanOfLightSmokers, meanOfHeavySmokers), 3),
+  Variance = round(c(varianceOfNonSmokers, varianceOfLightSmokers, varianceOfHeavySmokers), 3),
+  StdDev = round(c(stdevOfNonSmokers, stdevOfLightSmokers, stdevOfHeavySmokers), 3)
+)
+
+# Print the summary table
+print(summaryTable)
+
+
+
+```
+\
+**Key Insights:**
+
+1. **Balanced Design:** Each group has *n = 7* samples, which is ideal for ANOVA.  
+2. **Highest Mean:** Heavy Smokers have the highest mean heart rate (78.571bpm) 
+3. **Lowest Mean:** Non Smokers have the lowest mean heart rate (58 bpm)
+4. **Highest Variability:** Non Smokers also exhibit the greatest variability (Std. Dev. = 7.024).  
+5. **Lowest Variability:** Heavy Smokers has the most consistent results (Std. Dev. = 5.682).  
+6. **Initial Observation:** Clear differences in group means suggest a potential treatment effect to be tested with ANOVA.
+\
+\
+
+### Generate ANOVA Table
+```{r}
+# Fit a one-way ANOVA model
+# Response variable: heartRate
+# Predictor (grouping factor): people
+heartRateANOVA = aov(heartRate ~ people, data = heartRateDataFrame)
+
+# Display the ANOVA table
+# This output includes:
+# - Degrees of Freedom (DF)
+# - Sum of Squares (SS)
+# - Mean Squares (MS)
+# - F-statistic
+# - P-value
+summary(heartRateANOVA)
+
+```
+
+---
+
+ **Interpretation**
+
+- **Degrees of Freedom (Df):**  
+  - Between Groups (People): 2  
+  - Within Groups (Residuals): 18  
+
+- **Sum of Squares (SS):**  
+  - Between Groups(People): 1494.9  
+  - Within Groups(Residuals): 685.7  
+
+- **Mean Squares (MS):**  
+  - Between Groups (People): 747.4  
+  - Within Groups(Residuals): 38.1  
+
+- **F-value:** 19.62 
+
+- **P-value:** 0.0000301
+
+> **Interpretation of p-value:**  
+> Assuming the null hypothesis is true (that all three groups of people have the same mean heart rate)
+\
+Ho = HnonSmoker = HlightSmoker = HheavySmoker\
+Ha = At least one of the means differ
+
+Since the p-value (0.0000301) is **less than 0.05**, we reject the null hypothesis and conclude that **at least one group of people has a significantly different mean heart rate**.
+
+---
+
+**Continued:**  
+To determine *which specific pairs of mean heart rates* differ, a **Tukey HSD post-hoc test** will be performed.
+
+### Boxplot to Confirm ANOVA Results
+
+Before performing the Tukey HSD post-hoc test, we first create a boxplot to **visually confirm** the ANOVA results.  
+The boxplot shows the distribution of mean heart rate for each group of people, helping us see differences in medians, variability, and potential outliers.
+
+```{r}
+# Create a horizontal boxplot to compare shear bond strength across the four repair kits
+boxplot(heartRate ~ people,                  
+        data = heartRateDataFrame,           # Data frame containing the variables
+        horizontal = TRUE,               # Display boxes horizontally for better readability
+        xlab = "Mean Heart Rates (bpm)",  # Label for the x-axis
+        ylab = "",                        # Leave y-axis label blank since kit names are already shown
+        main = "Heart Rates by Group of People") # Main title of the plot
+
+# Add points to represent the group means on top of each box
+points(tapply(heartRateDataFrame$heartRate, heartRateDataFrame$people, mean), # Compute mean for each group of people
+       1:length(levels(heartRateDataFrame$people)),  # Match the position of each mean to the box location
+       pch = 19)                               # Solid circles (pch = 19) for visibility
+
+
+```
+
+### Interpretation of the Boxplot
+
+
+
+#### Visual Comparison
+
+- Heavy Smokers have the highest mean heart rate  
+- The gap between these groups suggests a strong likelihood of significant differences.  
+
+---
+
+### Summary
+
+The boxplot results **support the ANOVA findings** that at least one group mean differs.  
+However, while the boxplot suggests where differences may exist, a statistical test such as **Tukey's HSD** is required to confirm which specific pairs of groups differ.\
+\
+
+### Checking Normality with a Q-Q Plot
+
+The Q-Q (quantile-quantile) plot is used to visually assess whether the residuals from the ANOVA model are approximately normally distributed.  
+If the residuals are normal, the points should closely follow the diagonal reference line.
+
+```{r, fig.width=6, fig.height=6}
+
+# Extract residuals from the ANOVA model
+residualsANOVA = residuals(heartRateANOVA)
+
+# Create a Q-Q plot
+qqnorm(residualsANOVA, 
+       main = "Q-Q Plot of ANOVA Residuals",
+       xlab = "Theoretical Quantiles",
+       ylab = "Sample Quantiles",
+       pch = 19, col = "blue") 
+
+# Reference line
+qqline(residualsANOVA, col = "red", lwd = 3)
+
+```
+#### Interpretation of Q-Q Plot
+
+
+- Most points closely follow the red diagonal line, which represents a perfect normal distribution.  
+- A few points slightly deviate at the extremes (tails), but these deviations are minor and expected in small samples.  
+
+**Interpretation:**  
+This indicates that the residuals are approximately normal, satisfying the normality assumption.
+
+### Tukey's HSD Test
+
+```{r fig.width=12, fig.height=6}
+
+tukeyResult = TukeyHSD(heartRateANOVA) # Run Tukey's HSD post-hoc test
+
+
+print(tukeyResult) # Print the Tukey test results
+
+#  Visualize Tukey HSD results
+par(mar = c(8, 10, 5, 3)) # Increase left margin space
+
+plot(tukeyResult, las = 1, col = "blue")  # Extra space for labels
+```
+
+
+### Interpretation of Tukey Results
+
+#### Significant Differences
+- **NonSmoker vs HeavySmoker**: `p = 0.0000200` → Significant difference, heavy smoker is higher
+- **NonSmoker vs LightSmoker**: `p = 0.0050912` → Significant difference, light smoker is higher.  
+- **LightSmoker vs HeavySmoker**: `p = 0.045` → Significant difference, heavy smoker is slightly higher
+
+---
+
+### Conclusion
+- Light Smokers and Heavy Smokers have **high mean heart rate**.
+- There is a **significant difference** between the mean heart rates of non smokers and heavy smokers.  
+- These findings guide recommendations for the health related issues from people who don't smoke and people who smoke.
+\
+\
+
+# Two Way ANOVA
+
+```{r}
+# Assigning information to combine into a data frame
+Location = c(rep("Chicago", 6), rep("Bolingbrook", 6), rep("Peoria", 6))
+Service = c(rep("Specialty Chain", 3), rep("General Service", 3), rep("Specialty Chain", 3),
+          rep("General Service", 3), rep("Specialty Chain", 3), rep("General Service", 3))
+Price = c(79.80, 111.80, 95.96, 87.96, 107.80, 99.80, 95.96, 119.80, 115.96, 89.80, 119.80, 112.52, 99.96, 107.96, 79.80, 91.96, 99.80, 111.96)
+
+
+```
+
+```{r}
+# Combine into a data frame
+meanOilChangePriceDataFrame = data.frame(Location, Service, Price)
+```
+
+```{r}
+print(meanOilChangePriceDataFrame)
+```
+
+```{r}
+# Running the Two-Way ANOVA in R
+
+oilTwoWayANOVA=aov(Price ~ Location * Service, data = meanOilChangePriceDataFrame)
+
+
+```
+
+```{r}
+summary(oilTwoWayANOVA)
+
+```
+### Key insights (\(\alpha = 0.05\))
+
+- **Interaction (Location × Service):** Not statistically significant (\(p = 0.854\)).  
+
+- **Main effect of Location:** Not statistically significant (\(p = 0.287\)).  
+
+- **Main effect of Service:** Not statistically significant (\(p = 0.804\)).  
+
+The effects of location and service do not change across the levels of each other.
+
+---
+
+```{r}
+# Interaction plot in R
+interaction.plot(
+  x.factor = meanOilChangePriceDataFrame$Location,       # Factor on x-axis
+  trace.factor = meanOilChangePriceDataFrame$Service,  # Groups traced by color
+  response = meanOilChangePriceDataFrame$Price,       # Response variable
+  fun = mean,                            # Use means for each group
+  type = "b",                            # Points and lines ("b" = both)
+  col = c("red", "blue", "green"),       # Colors for Drug levels
+  pch = 16,                              # Solid points
+  xlab = "Location",
+  ylab = "Mean Oil Change Price",
+  trace.label = "Service provided",
+  main = "Interaction Plot for Oil Change Prices"
+)
+
+```
+
+\
+
+### Interpretation of Interaction Plot
+
+The plot shows that **there is an interaction but it is not statistically significant.**  
+
+This visually supports the **non-significant interaction term** (*p = 0.854*) found in the ANOVA table.  
+
+### Conclusion
+
+- No significant **interaction** exists between Location and Service.  
+- **Service** does not significantly affects prices, regardless of location.  
+- **Location** alone does not significantly alter price levels.  
+
