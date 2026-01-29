@@ -1,0 +1,272 @@
+---
+title: "Solving problems using nonparametric methods in R"
+author: "Eduardo Marquez Mora"
+date: "2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(randtests)
+
+```
+
+## 1. Quality Control (Runs Test for Randomness)
+
+A quality-control inspector tracks the compressive strength of parts created by an injection molding process. If the process is in control, the strengths should fluctuate randomly around the target value of 75 psi. The inspector measures the strength of 20 parts as they come off the production line and obtains the following strengths, in order:
+
+```{r p1}
+# Strengths of 20 parts
+strengths = c(82.0,78.3,73.5,74.4,72.6,79.8,77.0,83.4,76.2,75.2,81.5,69.8,71.3,69.4,82.1,77.6,76.9,77.1,72.7,73.6)
+nStrengths = length(strengths)
+
+print(strengths)
+
+```
+
+\
+
+### Conducting a Runs Test for Randomness of the compression strengths at the <br> α = 0.05 level of significance
+
+```{r}
+# Perform runs test
+
+runs.test(strengths, threshold = 75, alternative = "two.sided")
+
+```
+
+Since p-value = 0.02733 < 0.05, we **reject Ho**. <br>
+There is enough evidence at the 0.05 level to claim that the sequence of parts' strengths is nonrandom.
+\
+\
+
+## 2. Acid Rain Problem
+In 2002, the median pH level of the rain in Glacier National Park, Montana, was 5.25. A biologist thinks that the acidity of rain has decreased since then, which would suggest the pH has increased. The biologist obtains a random sample of 15 rain dates in 2022 and records the following data:
+```{r}
+# Data
+
+rainData = c(5.31, 5.19, 5.55, 5.38, 5.37, 5.19, 5.26, 5.29, 5.27, 5.19, 5.27, 5.36, 5.22, 5.28, 5.24)
+
+print(rainData)
+
+
+```
+
+\
+
+### Using the **sign test**, we can determine whether there is significant evidence at the <br>α = 0.05 level to conclude that the median pH level in 2022 is greater than 5.25.
+
+```{r}
+# Calculate differences
+
+differences = rainData - 5.25
+
+# Remove values equal to 5.25 (avoid ties)
+
+differencesNoTies = differences[differences != 0]
+
+sampleSizeDifferences = length(differencesNoTies)
+
+# Count number of positive signs (above 5.25)
+
+positiveSigns = sum(differencesNoTies > 0)
+
+# Perform the exact binomial test
+
+binom.test(positiveSigns, sampleSizeDifferences, p = 0.5, alternative = "greater")
+
+
+```
+
+### Hypothesis test and interpreting results
+
+H0 : η = 5.25 <br>
+Ha : η > 5.25 (right–tailed)
+
+<br>
+
+Since p-value = 0.1509 > 0.05, we **fail to reject Ho**. <br>
+
+At 0.05 level, we don't have enough evidence to claim that the median pH level in 2022 is greater than 5.25
+
+<br>
+
+## 3. Effect of Aspirin on Blood Clotting
+
+Blood clotting is due to a sequence of chemical reactions. The protein thrombin initiates blood clotting by working with another protein, **prothrombin**. It is common to measure an individual’s blood clotting time as prothrombin time, the time between the start of the thrombin–prothrombin reaction and the formation of the clot. Researchers wanted to study the effect of aspirin on prothrombin time. They randomly selected 12 subjects and measured the prothrombin time (in seconds) without taking aspirin and again 3 hours after taking two aspirin tablets. To solve, we will use the **Wilcoxon Signed-Rank test** for paired samples with the following data:
+
+```{r}
+# Data
+
+beforeAspirin = c(12.3, 12.0, 12.0, 13.0, 13.0, 12.5, 11.3, 11.8, 11.5, 11.0, 11.0, 11.3)
+
+afterAspirin = c(12.0, 12.3, 12.5, 12.0, 13.0, 12.5, 10.3, 11.3, 11.5, 11.5, 11.0, 11.5)
+
+# Perform Wilcoxon Signed-Rank test (paired)
+
+wilcox.test(beforeAspirin,afterAspirin,
+            paired = TRUE,
+            alternative = "two.sided",
+            exact = FALSE,
+            correct = FALSE)
+
+
+```
+
+### Hypothesis test and interpreting results
+
+Ho = Md = 0 <br>
+Ha = Md != 0 <br>
+
+
+Since p-value = 0.5256 > 0.05 (alpha), we **fail to reject Ho**.<br>
+
+At 0.05 level, there is not enough evidence to claim that the aspirin affects the median prothrombin time.
+\
+\
+
+## 4. Calcium in Rainwater (Independent Samples)
+
+Calcium in Rainwater. An environmentalist wants to determine whether the median calcium level (mg/L) in rainwater from Lincoln County, Nebraska, differs from that in Clarendon County, South Carolina. During weeks when rain occurred, calcium levels were recorded for n1 = 22 weeks in Lincoln County and n2 = 20 weeks in Clarendon County. To test whether the two population medians differ, we must use the **Mann Whitney U Test**
+
+```{r}
+# Data
+
+lincolnCounty = c(0.11, 0.41, 0.19, 0.33, 0.09, 0.33, 0.67, 0.20, 0.21, 0.20, 0.75, 0.42, 0.09, 0.22, 0.19, 0.25, 0.07, 0.34, 0.30, 0.47, 0.30, 0.46)
+
+clarendonCounty = c(0.06, 0.12, 0.14, 0.10, 0.09, 0.29, 0.14, 0.21, 0.14, 0.10, 0.12, 0.16, 0.16, 0.41, 0.08, 0.13, 0.03, 0.08, 0.09, 0.12)
+
+lincolnLength = length(lincolnCounty); lincolnLength
+
+clarendonLength = length(clarendonCounty); clarendonLength
+
+
+# Mann Whitney (Wilcoxon rank-sum) test: two tailed
+
+wilcox.test(lincolnCounty, clarendonCounty,
+            alternative = "two.sided",
+            exact = FALSE,
+            correct = FALSE)
+
+```
+
+
+### Hypothesis test and interpreting results
+
+Ho = M1 = M2 <br>
+Ha = M1 != M2 <br>
+
+Since p-value = 0.0006062 < 0.05 (alpha), we **reject Ho**. <br>
+
+There is enough evidence at the 0.05 level to claim that the two population medians differ.
+\
+\
+
+## 5. Does Defense Win? 
+
+Does Defense Win? “Defense wins championships” is a common phrase used in the National Football League. Is defense associated with winning? To assess this, we can use the **Spearman's rank test**. The following data represents the winning percentage and the yards per game allowed during the 2022–2023 season for a random sample of teams:
+
+```{r}
+# Data
+
+winningPercentage = c(0.588, 0.412, 0.294, 0.529, 0.471, 0.353, 0.529)
+
+yardsPerGameAllowed = c(324.3, 331.2, 320.0, 353.3, 322.0, 365.6, 330.4)
+
+# Spearman's rank test
+
+spearman_out = cor.test(winningPercentage, yardsPerGameAllowed,
+                        method = "spearman",
+                        exact = FALSE,
+                        alternative = "less")
+
+spearman_out$estimate
+```
+```{r}
+# p-value
+
+spearman_out$p.value
+
+```
+
+### Hypothesis test and interpreting results
+
+Ho = ρs = 0 <br>
+Ha = ρs < 0 <br>
+
+Since p-value = 0.5610204 > 0.10 (alpha), we **fail to reject Ho**. <br>
+
+At 0.10 level, there is not enough evidence to claim that higher winning percentages are associated with fewer yards allowed.
+\
+\
+
+## Scatter Plot to showcase relationship between yards per game allowed and winning percentage
+
+```{r scatter plot}
+
+# --- Scatterplot for visual relationship ---
+plot(winningPercentage, yardsPerGameAllowed,
+pch = 19, col = "blue",
+xlab = "Winning Percentage",
+ylab = "Yards per Game Allowed",
+main = "Scatter Plot: Defense vs. Winning Percentage")
+grid()
+
+```
+
+\
+\
+
+## 6. Comparing Math exams scores from different countries
+
+Researchers wanted to compare math test scores of students at the end of secondary school from various countries. Eight randomly selected students from Canada, Denmark, and the United States each were administered the same exam; the results are presented below. Using the **Kruskal-Wallis Test** we can test whether the distributions (medians) of exam scores are the same across the three countries:
+
+```{r}
+
+# Data
+
+canadaScores = c(578, 548, 548, 530, 521, 502, 555, 492)
+
+denmarkScores = c(568, 563, 530, 535, 571, 561, 569, 513)
+
+usaScores = c(506, 458, 518, 456, 485, 513, 480, 491)
+
+# Data frame to collect all information together
+
+scoresDataFrame = data.frame(
+  
+  totalScores = c(canadaScores, denmarkScores, usaScores),
+  
+  country = factor(
+    
+    c(rep("Canada Scores", length(canadaScores)),
+      rep("Denmark Scores", length(denmarkScores)),
+      rep("USA Scores", length(usaScores))),
+    levels = c("Canada Scores", "Denmark Scores", "USA Scores")
+    
+    
+  )
+)
+
+# Kruskal-Wallis Test
+
+kw_result = kruskal.test(totalScores ~ country, data = scoresDataFrame)
+print(kw_result)
+
+
+
+```
+
+
+### Hypothesis test and interpreting results
+
+Ho = The distribution of exam scores are all equal
+Ha = At least 2 differ
+
+Since p-value = 0.001448 < 0.01 (alpha), we **reject Ho**. <br>
+
+At 0.01 level, there is enough evidence to claim that at least 2 exam scores distributions differ.
+\
+
+\
