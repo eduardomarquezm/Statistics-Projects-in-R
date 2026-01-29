@@ -1,0 +1,258 @@
+---
+title: "Solving problems using Variance Analysis in R"
+author: "Eduardo Marquez Mora"
+date: "2025-09-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Researchers at the University of Mississippi wanted to investigate whether the variability of reaction times to a go/no-go stimulus differs between male and female students.
+A total of 20 female and 15 male students were randomly selected, and their reaction times (in seconds) were recorded.
+
+```{r introduction}
+
+femaleData <- c(0.588, 0.403, 0.293, 0.377, 0.613, 0.377, 0.391, 0.367, 0.442, 0.274, 
+0.434, 0.403, 0.636, 0.481, 0.652, 0.443, 0.380, 0.646, 0.340, 0.617)
+
+maleData <- c(0.375, 0.477, 0.374, 0.465, 0.402, 0.337, 0.655, 0.488, 0.427, 0.373, 
+0.224, 0.654, 0.563, 0.405, 0.256)
+
+```
+
+## 1. Researchers are interested in understanding the variability of reaction times among female students.
+
+Using the sample of 20 female students a 95% confidence interval for the population variance of reaction times must be created.
+
+### CI for Variance and Standard Deviation
+The CI for \(\sigma^2\) is
+\[
+\frac{(n-1)s^2}{\chi^2_{\alpha/2,df}} \le \sigma^2 \le \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,df}}.
+\]
+
+
+```{r Problem 1}
+
+femaleData <- c(0.588, 0.403, 0.293, 0.377, 0.613, 0.377, 0.391, 0.367, 0.442, 0.274, 
+0.434, 0.403, 0.636, 0.481, 0.652, 0.443, 0.380, 0.646, 0.340, 0.617)
+
+# With given female data, we can calculate:
+
+n <- length(femaleData)
+s <- round(sd(femaleData, na.rm = FALSE), 3)
+df <- n - 1
+alpha <- 1 - 0.95
+
+c(n = n, s = s, df = df, alpha = alpha)
+
+# 95% Confidence Interval: Critical values
+
+chi_rt_lower = qchisq(1 - alpha/2, df)
+chi_rt_upper = qchisq(alpha/2, df)
+
+round(c(chi_Lower = chi_rt_lower,chi_Upper = chi_rt_upper), 3)
+
+
+# 95% Confidence Interval
+
+lowerSide <- df * s^2 / chi_rt_lower
+upperSide <- df * s^2 / chi_rt_upper
+
+round(c(Lower_Interval = lowerSide, Upper_Interval = upperSide), 3)
+
+
+```
+
+# Conclusion
+
+We are 95% confident that the variance of the reaction times (in seconds) to a go/no-go stimulus of female students is between 0.009 and 0.032. Since the calculations resulted in a small variance, we could conclude that the female students' reaction times are very consistent.\
+\
+\
+
+
+## 2. A benchmark study previously suggested that the population variance of male students’ reaction times is 0.02 sec².
+
+Using the sample of 15 male students, test at the α=0.05
+ significance level whether the population variance for male reaction times is different from 0.02 sec².\
+ \
+
+- **Null Hypothesis (\(H_0\))**  
+  \[
+  H_0: \sigma_1^2 = \sigma_2^2
+  \]
+
+- **Alternative Hypothesis (\(H_a\))**  
+  \[
+  H_a: \sigma_1^2 ≠ \sigma_2^2
+  \]
+
+\
+
+```{r Problem 2}
+
+maleData <- c(0.375, 0.477, 0.374, 0.465, 0.402, 0.337, 0.655, 0.488, 0.427, 0.373, 
+0.224, 0.654, 0.563, 0.405, 0.256)
+
+nMale <- length(maleData)
+sMale <- round(sd(maleData, na.rm = FALSE), 3)
+sMaleSquared <- round(sMale^2, 3)
+dfMale <- nMale - 1
+varianceM <- 0.02
+alphaM <- 0.05
+
+round(c(n = nMale, s = sMale,  variance = varianceM, df = dfMale, alpha = alphaM), 3)
+
+# Calculate test statistic
+
+testStatisticMale <- dfMale * sMaleSquared / varianceM
+
+c(Test_Statistic = testStatisticMale)
+
+
+# Calculate p-value
+
+p_value <- round(2 * min(pchisq(testStatisticMale, df), 1 - pchisq(testStatisticMale, df)),3)
+
+c(pValue = p_value)
+
+```
+
+# Conclusion
+
+Since:
+
+\[
+p\text{-value} = 0.166 > 0.05 = \alpha
+\]
+
+At 0.05 level, we **fail to reject \(H_0\)**. There is not enough evidence to claim that the variance of male students' reaction times is different from 0.02 seconds squared.\
+\
+\
+
+## 3. The researchers want to compare the variability between male and female students.
+
+Using both samples, we construct a 95% confidence interval for the ratio of population variances (σ2F/σ2M), with the larger sample variance in the numerator
+
+```{r Problem 3}
+
+femaleData <- c(0.588, 0.403, 0.293, 0.377, 0.613, 0.377, 0.391, 0.367, 0.442, 0.274, 
+0.434, 0.403, 0.636, 0.481, 0.652, 0.443, 0.380, 0.646, 0.340, 0.617)
+
+maleData <- c(0.375, 0.477, 0.374, 0.465, 0.402, 0.337, 0.655, 0.488, 0.427, 0.373, 
+0.224, 0.654, 0.563, 0.405, 0.256)
+
+# From the past 2 previous problems, we already have the standard deviation and n
+
+nFemale <- n
+sFemale <- s
+sFemaleSquared <- round(sFemale^2, 3)
+nMale <- nMale
+sMale <- sMale
+sMaleSquared <- sMaleSquared
+
+c(nFemale = nFemale, sFemale = sFemale, nMale = nMale, sMale = sMale)
+
+# Critical value - F-distribution
+
+# Upper critical value
+upperCriticalValue <- round(qf(alpha / 2, dfMale, df, lower.tail = FALSE), 3)
+
+# Lower critical value
+lowerCriticalValue <- round(qf(alpha / 2, dfMale, df, lower.tail = TRUE), 3)
+
+
+c(lowerCritValue = lowerCriticalValue, upperCritValue = upperCriticalValue)
+
+
+# Calculate the interval
+
+leftRatioInterval <- round((sMaleSquared / sFemaleSquared * lowerCriticalValue), 3)
+rightRatioInterval <- round((sMaleSquared / sFemaleSquared * upperCriticalValue), 3)
+
+c(leftRatioInterval = leftRatioInterval, rightRatioInterval = rightRatioInterval)
+
+```
+
+# Conclusion
+
+Our interval contains 1, so there is not enough statistical evidence to conclude that the population variances of males and females are different. In other words, male and female populations could have similar variability.\
+\
+\
+
+
+## 4. The researchers want to formally test whether the variability in reaction times is statistically different between male and female students.
+
+Constructing an F-test at the α = 0.05 significance level, we could test the variability between both samples.
+
+
+- **Null Hypothesis (\(H_0\))**  
+  \[
+  H_0: \sigma_1^2 = \sigma_2^2
+  \]
+
+- **Alternative Hypothesis (\(H_a\))**  
+  \[
+  H_a: \sigma_1^2 ≠ \sigma_2^2
+  \]
+
+
+
+\
+\
+
+```{r Problem 4}
+
+femaleData <- c(0.588, 0.403, 0.293, 0.377, 0.613, 0.377, 0.391, 0.367, 0.442, 0.274, 
+0.434, 0.403, 0.636, 0.481, 0.652, 0.443, 0.380, 0.646, 0.340, 0.617)
+
+maleData <- c(0.375, 0.477, 0.374, 0.465, 0.402, 0.337, 0.655, 0.488, 0.427, 0.373, 
+0.224, 0.654, 0.563, 0.405, 0.256)
+
+# From the past 2 previous problems, we already have the standard deviation and n
+
+nFemale <- nFemale
+sFemale <- sFemale
+sFemaleSquared <- sFemaleSquared
+nMale <- nMale
+sMale <- sMale
+sMaleSquared <- sMaleSquared
+
+c(nFemale = nFemale, sFemale = sFemale, nMale = nMale, sMale = sMale)
+
+
+# Calculate F statistic
+
+F_Statistic <- round((sMaleSquared / sFemaleSquared), 3)
+
+c(F_Statistic = F_Statistic)
+
+# Calculate p-value
+
+pValueF <- round(pf(F_Statistic, df, dfMale, lower.tail = FALSE), 3)
+
+c(p_Value_F = pValueF)
+
+
+```
+
+# Conclusion
+
+Since:
+
+\[
+p\text{-value} = 0.459 > 0.05 = \alpha
+\]
+
+We **fail to reject \(H_0\)**. There is not enough evidence at 0.05 level to conclude that the variability in reaction times between male and female students are different. In other words, we cannot be certain that one group has more variability than the other.
+
+\
+
+## Summary
+
+After successfully completing 4 different tests related to the variance of the reaction times (in seconds) between male and female students, we concluded that there are no significant differences between them, instead, we are almost certain that they share a very similar variability.\
+
+All of our tests revealed consistent results, and we were able to observe that, despite being separated in different categories (male / female), there was not a significant difference in the variance of reaction times. Still, it is important to note that we tested 20 females and 15 males, and there is always a possibility that if we add more people, the data might change in a significant way.
