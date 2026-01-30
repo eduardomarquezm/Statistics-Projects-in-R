@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Statistics Projects in R</title>
+
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --accent: #3b82f6;
+      --text: #1f2937;
+      --muted: #6b7280;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .projects {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 35px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .card a {
+      display: inline-block;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .card a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Statistics Projects in R</h1>
+      <p>Solving statistics problems using R programming</p>
+    </header>
+
+    <section class="projects">
+
+      <div class="card">
+        <h2>Variance Analysis</h2>
+        <p>
+          Testing variability in datasets, including variance
+          decomposition and comparisons between samples.
+        </p>
+        <a href="VarianceAnalysisProject.html">View project </a>
+      </div>
+
+      <div class="card">
+        <h2>ANOVA</h2>
+        <p>
+          One-way and multi-factor ANOVA models, assumptions,
+          hypothesis testing, and result interpretation.
+        </p>
+        <a href="ANOVA_Project.html">View project </a>
+      </div>
+
+      <div class="card">
+        <h2>Nonparametric Methods</h2>
+        <p>
+          Distribution-free inferences using rank-based tests and
+          accurate alternatives to common parametric methods.
+        </p>
+        <a href="NonparametricMethodsProject.html">View project</a>
+      </div>
+
+  </div>
+</body>
+</html>
