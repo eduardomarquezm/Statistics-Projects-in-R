@@ -1,0 +1,162 @@
+---
+title: "Predicting house prices using Linear Regression in R"
+author: "Eduardo Marquez Mora"
+date: "2026"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load package
+library(MASS)
+library(car)
+
+# Load dataset
+data(Boston)
+
+attach(Boston)
+
+```
+
+## Introduction
+
+Using the built-in Boston dataset, predict house prices with information such as information such as:
+
+* Crime rate
+* Average number of rooms
+* Property tax rate
+* Distance to employment centers
+* Median home value (medv)
+
+
+```{r Boston}
+
+head(Boston)
+```
+
+## 1. How many observations and variables are in the dataset?
+
+```{r 1}
+dim(Boston)
+```
+501 observations and 14 variables.
+
+## 2. What is the average house price?
+
+```{r 2}
+mean(Boston$medv)
+```
+Around $22,533.
+
+## 3. Which variable has the strongest correlation with house price?
+
+```{r 3}
+
+cor_matrix_Boston <- cor(Boston)
+round(cor_matrix_Boston, 3)
+
+```
+rad (index of accessibility to radial highways) and tax (full-value property0tax rate per $10,000) seem to have the highest correlation: 0.910
+
+## 4. Create a scatterplot of:
+
+* rm (average rooms)
+* versus medv (median value of home)
+
+```{r 4}
+
+plot(Boston$rm, Boston$medv,
+     xlab = "Average Rooms",
+     ylab = "Median Home Value",
+     main = "Rooms vs House Price")
+
+```
+
+
+## 5. Fit a simple linear regression model predicting house price (medv) using number of rooms (rm)
+
+```{r 5}
+
+simpleBostonModel <- lm(medv ~ rm, data = Boston)
+summary(simpleBostonModel)
+
+```
+Model: y = -34.671 + 9.102x + E
+
+
+With the given model, we can predict that the more rooms, the higher the house price will be. More specifically, the house price will increase by approximately $9,100, holding all other variables constant.
+
+## 7. What percentage of variation in house price is explained by the model?
+
+With the previous output, we can observe R-squared: 0.4835. About 48.35% of the variation in median house prices is explained by the number of rooms in the house.
+
+## 8. Multiple linear regression. Fit a multiple linear regression model using rm, lstat, ptratio to predict medv
+
+```{r 8}
+
+multipleBostonModel <- lm(medv ~ rm + lstat + ptratio, data = Boston)
+summary(multipleBostonModel)
+
+```
+Model: y = 18.567 + 4.515x1 - 0.572x2 - 0.931x3 + E
+
+* Each additional room is associated with a increase of $4,515 dollars in median home value.
+* For a 1-unit increase in lstat (lower status of the population percentage), the median home value is expected to decrease by $572.
+* For a 1-unit increase in ptratio (pupil-teacher ratio by town),, the median home value is expected to decrease by $931.
+
+## 9. Which predictors are statistically significant?
+
+All of the predictors are statistically significant, since their p-values are very much smaller than 0.05.
+
+## 10. Compare both models
+
+```{r 10}
+
+summary(simpleBostonModel)
+summary(multipleBostonModel)
+
+```
+
+The multiple regression model has a higher Adjusted R-squared, as well as the addition of other significant predictors.
+
+
+## 11. Check residual plots for multiple regression model
+
+```{r 11}
+par(mfrow = c(2,2))
+plot(multipleBostonModel)
+
+```
+
+There is a clear violation in the linearity and constant variance assumptions.
+
+## 12. Create confidence interval for regression coefficients
+
+```{r 12}
+confint(multipleBostonModel)
+```
+
+
+## 13. Check for multicollinearity using VIF
+
+```{r 13}
+vif(multipleBostonModel)
+```
+The VIF for all variables is under our threshold of 10, so there is no risk of multicollinearity.
+
+
+## 14. House price prediction 
+House: rm = 7, lstat = 10, ptratio = 18
+
+```{r 14}
+newHousePrediction <- data.frame(
+  rm = 7,
+  lstat = 10,
+  ptratio = 18
+)
+
+predict(multipleBostonModel, newdata = newHousePrediction)
+```
+The predicted house value is $27,704.
+
